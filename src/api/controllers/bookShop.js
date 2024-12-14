@@ -28,6 +28,9 @@ const postBookShop = async (req, res, next) => {
       phone: req.body.phone,
       website: req.body.website
     })
+    if (newBookShop) {
+      return res.status(400).json('Esta librería YA EXISTE!')
+    }
     const createdBookShop = await newBookShop.save()
     return res.status(201).json(createdBookShop)
   } catch (error) {
@@ -38,13 +41,17 @@ const postBookShop = async (req, res, next) => {
 const putBookShop = async (req, res, next) => {
   try {
     const { id } = req.params
+    const { books } = req.body
     const oldBookShop = await BookShop.findById(id)
-    const bookShopModify = new BookShop(req.body)
-    bookShopModify._id = id
-    bookShopModify.books = [...oldBookShop.books, ...bookShopModify.books]
+    if (!oldBookShop) {
+      return res.status(404).json('Librería inexistente')
+    }
+    if (!books) {
+      return res.status(404).json('No hay libros relacionados')
+    }
     const bookShopUpdated = await BookShop.findByIdAndUpdate(
       id,
-      bookShopModify,
+      { $addToSet: { books: { $each: books } } },
       { new: true }
     )
     return res.status(200).json(bookShopUpdated)

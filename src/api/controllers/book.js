@@ -3,7 +3,7 @@ const Book = require('../models/book.js')
 
 const getBook = async (req, res, next) => {
   try {
-    const allBook = await Book.find()
+    const allBook = await Book.find().populate('bookShops')
     return res.status(200).json(allBook)
   } catch (error) {
     return res.status(400).json(error)
@@ -12,21 +12,12 @@ const getBook = async (req, res, next) => {
 const getOneBook = async (req, res, next) => {
   try {
     const { id } = req.params
-    const oneBook = await Book.findById(id)
+    const oneBook = await Book.findById(id).populate('bookShops')
     return res.status(200).json(oneBook)
   } catch (error) {
     return res.status(400).json(error)
   }
 }
-// const getByAuthor = async (req, res, next) => {
-//   try {
-//     const { author } = req.params
-//     const bookByAuthor = await Book.findOne(author)
-//     return res.status(200).json(bookByAuthor)
-//   } catch (error) {
-//     return res.status(400).json(error)
-//   }
-// }
 const postBook = async (req, res, next) => {
   try {
     const newBook = new Book({
@@ -36,6 +27,9 @@ const postBook = async (req, res, next) => {
       image: req.body.image,
       description: req.body.description
     })
+    if (newBook) {
+      return res.status(400).json('Este libro YA EXISTE!')
+    }
     const bookCreated = await newBook.save()
     return res.status(200).json(bookCreated)
   } catch (error) {
@@ -46,11 +40,21 @@ const postBook = async (req, res, next) => {
 const putBook = async (req, res, next) => {
   try {
     const { id } = req.params
-    const bookModify = new Book(req.body)
-    bookModify._id = id
-    const bookUpdated = await Book.findByIdAndUpdate(id, bookModify, {
-      new: true
-    })
+    const { bookShops } = req.body
+    if (!bookShops) {
+      return res.status(404).json('No hay librerías relacionadas')
+    }
+    const oldBook = await Book.findById(id)
+    if (!oldBook) {
+      return res.status(404).json('El libro no existe')
+    }
+    const bookUpdated = await Book.findByIdAndUpdate(
+      id,
+      { $addToSet: { bookShops: { $each: bookShops } } },
+      {
+        new: true
+      }
+    )
     return res.status(200).json(bookUpdated)
   } catch (error) {
     return res.status(400).json(error)
