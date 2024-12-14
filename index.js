@@ -6,7 +6,7 @@ const bookRouter = require('./src/api/routes/book.js')
 
 const app = express()
 connectDB()
-// la siguiente linea configura el servidor para que pueda recibir res.body en formato json
+
 app.use(express.json())
 
 app.use('/api/v1/bookShops', bookShopRouter)
