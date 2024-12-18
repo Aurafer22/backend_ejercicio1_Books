@@ -22,15 +22,17 @@ const getOneBookShop = async (req, res, next) => {
 
 const postBookShop = async (req, res, next) => {
   try {
-    const newBookShop = await new BookShop({
+    const { name, address } = req.body
+    const dupliBookShop = await BookShop.findOne(name, address)
+    if (dupliBookShop) {
+      return res.status(400).json('Esta librería YA EXISTE!')
+    }
+    const newBookShop = new BookShop({
       name: req.body.name,
       address: req.body.address,
       phone: req.body.phone,
       website: req.body.website
     })
-    if (newBookShop) {
-      return res.status(400).json('Esta librería YA EXISTE!')
-    }
     const createdBookShop = await newBookShop.save()
     return res.status(201).json(createdBookShop)
   } catch (error) {

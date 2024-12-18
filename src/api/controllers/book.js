@@ -20,6 +20,11 @@ const getOneBook = async (req, res, next) => {
 }
 const postBook = async (req, res, next) => {
   try {
+    const { title, author } = req.body
+    const duplicatedBook = await Book.findOne(title, author)
+    if (duplicatedBook) {
+      return res.status(400).json('Este libro YA EXISTE!')
+    }
     const newBook = new Book({
       title: req.body.title,
       author: req.body.author,
@@ -27,9 +32,6 @@ const postBook = async (req, res, next) => {
       image: req.body.image,
       description: req.body.description
     })
-    if (newBook) {
-      return res.status(400).json('Este libro YA EXISTE!')
-    }
     const bookCreated = await newBook.save()
     return res.status(200).json(bookCreated)
   } catch (error) {
